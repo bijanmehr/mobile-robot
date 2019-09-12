@@ -2,7 +2,7 @@
 
 #ifndef STASSID
 #define STASSID "****"
-#define STAPSK  "****************"
+#define STAPSK  "*****************"
 #endif
 
 const char* ssid = STASSID;
@@ -18,10 +18,10 @@ String req;
 int RPWM = 0;
 int LPWM = 0;
 
-int AApin = D0;
-int ABpin = D1;
-int BApin = D2;
-int BBpin = D3;
+int AApin = 4;  //D2 right
+int ABpin = 14;  //D5 right
+int BApin = 12; //D6 left
+int BBpin = 15; //D8 left
 
 void setup() {
 
@@ -98,45 +98,41 @@ int reqhandler() {
     // commands should be this form "MRxLy*", M = motor command, R = right, L = left, x = right PWM, y = left PWM, * = end of command.
     RPWM = req.substring(req.indexOf("R") + 1, req.indexOf("L")).toInt();
     LPWM = req.substring(req.indexOf("L") + 1, req.indexOf("*")).toInt();
-
-    if (RPWM > 255) {
-      Serial.println("ERROR: maximum PWM range is 255!");
-      RPWM = 255;
-    }
-    if (LPWM > 255) {
-      Serial.println("ERROR: maximum PWM range is 255!");
-      LPWM = 255;
-    }
-  }
-  else {
-    Serial.println("ERROR, incorect command");
-  }
+    
   return RPWM;
   return LPWM;
   Serial.println("RPWM = "+ String(RPWM) +"  "+"LPWM = "+ String(LPWM));  
 }
-
+}
 void movment(int Rspeed, int Lspeed){
-  if (Rspeed >= 0){
+  if(Rspeed > 0 && Lspeed > 0){
     analogWrite(AApin,Rspeed);
     analogWrite(ABpin,0);
-    Serial.println("R_forward");
-  }
-  else{
-    analogWrite(ABpin,Rspeed);
-    analogWrite(AApin,0);
-    Serial.println("R_backward");
-  }
-
-  if (Lspeed >= 0){
     analogWrite(BApin,Lspeed);
     analogWrite(BBpin,0);
-    Serial.println("L_forward");
+  }
+  else if(Rspeed > 0 && Lspeed < 0){
+    analogWrite(AApin,Rspeed);
+    analogWrite(ABpin,0);
+    analogWrite(BApin,0);
+    analogWrite(BBpin,Lspeed * (-1));
+  }
+  else if(Rspeed < 0 && Lspeed > 0){
+    analogWrite(AApin,0);
+    analogWrite(ABpin,Rspeed * (-1));
+    analogWrite(BApin,Lspeed);
+    analogWrite(BBpin,0);
+  }
+  else if(Rspeed < 0 && Lspeed < 0){
+    analogWrite(AApin,0);
+    analogWrite(ABpin,Rspeed * (-1));
+    analogWrite(BApin,0);
+    analogWrite(BBpin,Lspeed * (-1));
   }
   else{
-    analogWrite(BBpin,Lspeed);
+    analogWrite(AApin,0);
+    analogWrite(ABpin,0);
     analogWrite(BApin,0);
-    Serial.println("L_backward");
+    analogWrite(BBpin,0);
   }
-  
 }
